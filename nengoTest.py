@@ -8,45 +8,78 @@ from PIL import Image
 
 root_dir_train = './mydata/training_set'
 root_dir_test = './mydata/test_set'
+root_dir_ran = './mydata/random_set'
 
 train_data = [[] for x in range(2)]
 test_data = [[] for x in range(2)]
 
 # Process training data
-for letterEntry in os.scandir(root_dir_train):
-    if not letterEntry.name.startswith('.') and letterEntry.is_dir():
-
-        
-
-        for img in os.scandir(letterEntry.path):
+for i in range(1750):
+    for letterEntry in os.scandir(root_dir_train):
+        if not letterEntry.name.startswith('.') and letterEntry.is_dir():
+            # for img in os.scandir(letterEntry.path):
+            #     if img.name == str(i+1) + '.png':
             # Add label array to training_data[1]
             label_arr = np.zeros(26)
             label_arr[ord(letterEntry.name)-65] = 1
             # np.append(train_data[1],label_arr)
             train_data[1].append(label_arr)
 
-            lc_img = Image.open(img.path).convert('L')
+            # lc_img = Image.open(img.path).convert('L')
+            lc_img = Image.open('./mydata/training_set/'+letterEntry.name+'/'+str(i+1)+'.png').convert('L')
+            
             img_arr = np.asarray(lc_img)
             # np.append(train_data[0],img_arr)
             train_data[0].append(img_arr.flatten())
 
-# Process test data
-for letterEntry in os.scandir(root_dir_test):
-    if not letterEntry.name.startswith('.') and letterEntry.is_dir():
+print(train_data)
+## USE FOR ACTUAL TEST
+# # Process test data CHANGE BACK TO TEST
+for i in range(250):
+    for letterEntry in os.scandir(root_dir_test):
+        if not letterEntry.name.startswith('.') and letterEntry.is_dir():
 
-        for img in os.scandir(letterEntry.path):
+            # for img in os.scandir(letterEntry.path):
             # Add label array to training_data[1]
             label_arr = np.zeros(26)
+            
+            # For test_set
             label_arr[ord(letterEntry.name)-65] = 1
+
             test_data[1].append(label_arr)
             # np.append(test_data[1],label_arr)
 
-            lc_img = Image.open(img.path).convert('L')
+            # lc_img = Image.open(img.path).convert('L')
+            lc_img = Image.open('./mydata/test_set/'+letterEntry.name+'/'+str(i+1)+'.png').convert('L')
+
             img_arr = np.asarray(lc_img)
             test_data[0].append(img_arr.flatten())
             # np.append(test_data[0],img_arr.flatten())
-# print(input_data)
+
 print(test_data)
+
+# # Process test data with RANDOM TEST
+# for letterEntry in os.scandir(root_dir_ran):
+#     if not letterEntry.name.startswith('.'):
+#         # Add label array to training_data[1]
+#         label_arr = np.zeros(26)
+        
+#         # For test_set
+#         # label_arr[ord(letterEntry.name)-65] = 1
+#         print(letterEntry.name)
+#         # For random set
+#         label_arr[ord(letterEntry.name[1:2])-97] = 1
+
+#         test_data[1].append(label_arr)
+#         # np.append(test_data[1],label_arr)
+
+#         lc_img = Image.open(letterEntry.path).convert('L')
+#         img_arr = np.asarray(lc_img)
+#         test_data[0].append(img_arr.flatten())
+
+
+# print(input_data)
+
 # for i in range(3):
 #     plt.figure()
 #     plt.imshow(np.reshape(train_data[0][i], (64, 64)),
@@ -115,6 +148,7 @@ with nengo.Network() as net:
 
     # Adding time steps
     minibatch_size = 200
+    # minibatch_size = 50
 
     sim = nengo_dl.Simulator(net, minibatch_size=minibatch_size)
 
@@ -122,6 +156,7 @@ with nengo.Network() as net:
                 out_p: np.asarray(train_data[1])[:, None,:]}
     
     n_steps = 30
+    # n_steps = 10
     print(test_data)
     test_data = {
         inp: np.tile(np.asarray(test_data[0])[:minibatch_size*2, None, :],
