@@ -93,13 +93,14 @@ with nengo.Network() as net:
     train_data = {inp: train_data[0][:, None, :],
     out_p: train_data[1][:, None, :]}
 
+    print(test_data)
     n_steps = 30
     test_data = {
         inp: np.tile(test_data[0][:minibatch_size*2, None, :],
                     (1, n_steps, 1)),
         out_p_filt: np.tile(test_data[1][:minibatch_size*2, None, :],
                             (1, n_steps, 1))}
-    
+    print(test_data)
     # Define objective and classification error functions
     def objective(outputs, targets):
         return tf.nn.softmax_cross_entropy_with_logits_v2(
@@ -116,11 +117,27 @@ with nengo.Network() as net:
     print("error before training: %.2f%%" % sim.loss(
         test_data, {out_p_filt: classification_error}))
 
-    do_training = True
+    do_training = False
     if do_training:
         # run training
         sim.train(train_data, opt, objective={out_p: objective}, n_epochs=10)
 
         # save the parameters to file
         sim.save_params("./asl_params")
+    else:
+        sim.load_params("./asl_params")
     
+    # Plotting
+    sim.run_steps(n_steps, data={inp: test_data[inp][:minibatch_size]})
+
+    for i in range(5):
+        plt.figure()
+        plt.subplot(1, 2, 1)
+        plt.imshow(np.reshape(test_data[inp][i, 0], (64, 64)),
+                cmap="gray")
+        plt.axis('off')
+
+        plt.subplot(1, 2, 2)
+        plt.plot(sim.trange(), sim.data[out_p_filt][i])
+        plt.legend([str(i) for i in range(26)], loc="upper left")
+        plt.xlabel("time")

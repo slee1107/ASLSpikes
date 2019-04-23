@@ -1,0 +1,2 @@
+model_checkpoint_path: "asl_params"
+all_model_checkpoint_paths: "asl_params"

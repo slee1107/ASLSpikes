@@ -16,13 +16,15 @@ test_data = [[] for x in range(2)]
 for letterEntry in os.scandir(root_dir_train):
     if not letterEntry.name.startswith('.') and letterEntry.is_dir():
 
-        # Add label array to training_data[1]
-        label_arr = np.zeros(26)
-        label_arr[ord(letterEntry.name)-65] = 1
-        # np.append(train_data[1],label_arr)
-        train_data[1].append(label_arr)
+        
 
         for img in os.scandir(letterEntry.path):
+            # Add label array to training_data[1]
+            label_arr = np.zeros(26)
+            label_arr[ord(letterEntry.name)-65] = 1
+            # np.append(train_data[1],label_arr)
+            train_data[1].append(label_arr)
+
             lc_img = Image.open(img.path).convert('L')
             img_arr = np.asarray(lc_img)
             # np.append(train_data[0],img_arr)
@@ -32,16 +34,19 @@ for letterEntry in os.scandir(root_dir_train):
 for letterEntry in os.scandir(root_dir_test):
     if not letterEntry.name.startswith('.') and letterEntry.is_dir():
 
-        # Add label array to training_data[1]
-        label_arr = np.zeros(26)
-        label_arr[ord(letterEntry.name)-65] = 1
-        test_data[1].append(label_arr)
-
         for img in os.scandir(letterEntry.path):
+            # Add label array to training_data[1]
+            label_arr = np.zeros(26)
+            label_arr[ord(letterEntry.name)-65] = 1
+            test_data[1].append(label_arr)
+            # np.append(test_data[1],label_arr)
+
             lc_img = Image.open(img.path).convert('L')
             img_arr = np.asarray(lc_img)
             test_data[0].append(img_arr.flatten())
-
+            # np.append(test_data[0],img_arr.flatten())
+# print(input_data)
+print(test_data)
 # for i in range(3):
 #     plt.figure()
 #     plt.imshow(np.reshape(train_data[0][i], (64, 64)),
@@ -117,6 +122,7 @@ with nengo.Network() as net:
                 out_p: np.asarray(train_data[1])[:, None,:]}
     
     n_steps = 30
+    print(test_data)
     test_data = {
         inp: np.tile(np.asarray(test_data[0])[:minibatch_size*2, None, :],
                     (1, n_steps, 1)),
@@ -135,19 +141,38 @@ with nengo.Network() as net:
             tf.cast(tf.not_equal(tf.argmax(outputs[:, -1], axis=-1),
                                 tf.argmax(targets[:, -1], axis=-1)),
                     tf.float32))
-
+    
+    for key in test_data:
+        test_data[key] = np.asarray(test_data[key])
     print("error before training: %.2f%%" % sim.loss(
         test_data, {out_p_filt: classification_error}))
     
-    do_training = True
+    do_training = False
     if do_training:
         # run training
         sim.train(train_data, opt, objective={out_p: objective}, n_epochs=10)
 
         # save the parameters to file
         sim.save_params("./asl_params")
+    else:
+        sim.load_params("./asl_params")
 
     print("error after training: %.2f%%" % sim.loss(
     test_data, {out_p_filt: classification_error}))
 
+    # Plotting
+    sim.run_steps(n_steps, data={inp: test_data[inp][:minibatch_size]})
+
+    for i in range(200):
+        plt.figure()
+        plt.subplot(1, 2, 1)
+        plt.imshow(np.reshape(test_data[inp][i, 0], (64, 64)),
+                cmap="gray")
+        plt.axis('off')
+
+        plt.subplot(1, 2, 2)
+        plt.plot(sim.trange(), sim.data[out_p_filt][i])
+        plt.legend([str(i) for i in range(26)], loc="upper left")
+        plt.xlabel("time")
+        plt.show()
     print('end')
