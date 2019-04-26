@@ -179,9 +179,11 @@ with nengo.Network() as net:
     
     for key in test_data:
         test_data[key] = np.asarray(test_data[key])
-    print("error before training: %.2f%%" % sim.loss(
+    print("error before training: %.8f%%" % sim.loss(
         test_data, {out_p_filt: classification_error}))
-    
+    accuracy_before = 100 - sim.loss(test_data, {out_p_filt: classification_error})
+    print("accuracy before training: %.8f%%" % accuracy_before)
+
     do_training = False
     if do_training:
         # run training
@@ -192,8 +194,11 @@ with nengo.Network() as net:
     else:
         sim.load_params("./asl_params")
 
-    print("error after training: %.2f%%" % sim.loss(
-    test_data, {out_p_filt: classification_error}))
+    print("error after training: %.8f%%" % sim.loss(
+        test_data, {out_p_filt: classification_error}))
+    accuracy_after = 100 - sim.loss(test_data, {out_p_filt: classification_error})
+
+    print("accuracy after training: %.8f%%" % accuracy_after)
 
     # Plotting
     sim.run_steps(n_steps, data={inp: test_data[inp][:minibatch_size]})
