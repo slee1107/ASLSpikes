@@ -1,7 +1,7 @@
 import numpy as np
 
 #confusion matrix a[expected][actual]
-confusion = np.zeroes((26, 26))
+confusion = np.zeros((26, 26))
 
 
 # This goes in the plotting loop
