@@ -34,8 +34,9 @@ for i in range(1750):
             train_data[0].append(img_arr.flatten())
 
 print(train_data)
-## USE FOR ACTUAL TEST
-# # Process test data CHANGE BACK TO TEST
+# USE FOR ACTUAL TEST
+# Process test data CHANGE BACK TO TEST
+expected_arr = []
 for i in range(250):
     for letterEntry in os.scandir(root_dir_test):
         if not letterEntry.name.startswith('.') and letterEntry.is_dir():
@@ -46,6 +47,8 @@ for i in range(250):
             
             # For test_set
             label_arr[ord(letterEntry.name)-65] = 1
+            expected_arr.append(np.argmax(label_arr))
+            # print(expected_arr)
 
             test_data[1].append(label_arr)
             # np.append(test_data[1],label_arr)
@@ -58,6 +61,9 @@ for i in range(250):
             # np.append(test_data[0],img_arr.flatten())
 
 print(test_data)
+# print(expected_arr)
+print(len(expected_arr))
+# exit()
 
 # # Process test data with RANDOM TEST
 # for letterEntry in os.scandir(root_dir_ran):
@@ -209,6 +215,7 @@ with nengo.Network() as net:
     sim.run_steps(n_steps, data={inp: test_data[inp][:minibatch_size]})
 
     for i in range(200):
+        expected = expected_arr[i]
         plt.figure()
         plt.subplot(1, 2, 1)
         plt.imshow(np.reshape(test_data[inp][i, 0], (64, 64)),
