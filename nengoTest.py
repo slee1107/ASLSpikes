@@ -6,6 +6,7 @@ import nengo_dl
 import os
 from PIL import Image
 
+# Directory names holding input data
 root_dir_train = './mydata/training_set'
 root_dir_test = './mydata/test_set'
 root_dir_ran = './mydata/random_set'
@@ -200,7 +201,11 @@ with nengo.Network() as net:
 
     print("accuracy after training: %.8f%%" % accuracy_after)
 
-    # Plotting
+    # Initialize confusion matrix
+    confusion = np.zeros((26, 26))
+
+    # Plotting, change to test_data[inp][:] and in range(larger size) to get more of the
+    # Output to print out
     sim.run_steps(n_steps, data={inp: test_data[inp][:minibatch_size]})
 
     for i in range(200):
@@ -212,7 +217,30 @@ with nengo.Network() as net:
 
         plt.subplot(1, 2, 2)
         plt.plot(sim.trange(), sim.data[out_p_filt][i])
+        print('Sim Data:\n')
+        print(sim.data[out_p_filt][i])
+        
+        print('Test Data\n')
+        print(test_data)
+        print(test_data[1][i])
+
+        print('Before creating confusion matrix')
+        # Confusion matrix creation
+        expected = np.argmax(test_data[1][i])
+        output_data = np.sum(sim.data[out_p_filt][i], axis=0) # output for the specific image we're testing 
+        actual = np.argmax(output_data)
+        confusion[expected][actual] = confusion[expected][actual] + 1
+
         plt.legend([str(i) for i in range(26)], loc="upper left")
         plt.xlabel("time")
         plt.show()
     print('end')
+
+    # def reduce_maxLetter(data):
+    #     maxLetter = np.zeros(26)
+    #     for i in range(26):
+    #         maxLetter[i] = np.sum(data[i])
+        
+        
+    
+
