@@ -33,7 +33,7 @@ for i in range(1750):
             # np.append(train_data[0],img_arr)
             train_data[0].append(img_arr.flatten())
 
-print(train_data)
+# print(train_data)
 # USE FOR ACTUAL TEST
 # Process test data CHANGE BACK TO TEST
 expected_arr = []
@@ -60,9 +60,9 @@ for i in range(250):
             test_data[0].append(img_arr.flatten())
             # np.append(test_data[0],img_arr.flatten())
 
-print(test_data)
+# print(test_data)
 # print(expected_arr)
-print(len(expected_arr))
+# print(len(expected_arr))
 # exit()
 
 # # Process test data with RANDOM TEST
@@ -152,6 +152,8 @@ with nengo.Network() as net:
     # training the network using a rate-based approximation)
     out_p = nengo.Probe(x)
     out_p_filt = nengo.Probe(x, synapse=0.1)
+    
+    print(x.probeable)
 
     # Adding time steps
     minibatch_size = 200
@@ -164,13 +166,13 @@ with nengo.Network() as net:
     
     n_steps = 30
     # n_steps = 10
-    print(test_data)
+    # print(test_data)
     test_data = {
         inp: np.tile(np.asarray(test_data[0])[:minibatch_size*2, None, :],
                     (1, n_steps, 1)),
         out_p_filt: np.tile(np.asarray(test_data[1])[:minibatch_size*2, None, :],
                             (1, n_steps, 1))}
-    print(test_data)
+    # print(test_data)
     # Define objective and classification error functions
     def objective(outputs, targets):
         return tf.nn.softmax_cross_entropy_with_logits_v2(
@@ -207,6 +209,9 @@ with nengo.Network() as net:
 
     print("accuracy after training: %.8f%%" % accuracy_after)
 
+    # Print out probe attributes after training
+    print(out_p_filt)
+    output_probe = nengo.Probe(x, 'output',synapse=0.1)
     # Initialize confusion matrix
     confusion = np.zeros((26, 26))
 
@@ -226,21 +231,22 @@ with nengo.Network() as net:
         plt.plot(sim.trange(), sim.data[out_p_filt][i])
         print('Sim Data:\n')
         print(sim.data[out_p_filt][i])
-        
-        print('Test Data\n')
-        print(test_data)
-        print(test_data[1][i])
 
         print('Before creating confusion matrix')
+        print(sim.data[out_p_filt])
+        print(sim.data[output_probe])
         # Confusion matrix creation
-        expected = np.argmax(test_data[1][i])
+        # expected = np.argmax(test_data['Probe'].attributes)
         output_data = np.sum(sim.data[out_p_filt][i], axis=0) # output for the specific image we're testing 
         actual = np.argmax(output_data)
-        confusion[expected][actual] = confusion[expected][actual] + 1
+        confusion[expected_arr[i]][actual] = confusion[expected_arr[i]][actual] + 1
 
+        print(confusion)
+        
         plt.legend([str(i) for i in range(26)], loc="upper left")
         plt.xlabel("time")
-        plt.show()
+        # plt.show()
+    print(out_p_filt)
     print('end')
 
     # def reduce_maxLetter(data):
