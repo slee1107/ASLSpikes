@@ -144,16 +144,17 @@ with nengo.Network() as net:
         pool_size=2, strides=2)
 
     # linear readout
+    # before_linear = nengo_dl.tensor_layer(x,neuron_type)
     x = nengo_dl.tensor_layer(x, tf.layers.dense, units=26)
-
+    final_x = nengo_dl.tensor_layer(x,neuron_type)
     # we'll create two different output probes, one with a filter
     # (for when we're simulating the network over time and
     # accumulating spikes), and one without (for when we're
     # training the network using a rate-based approximation)
     out_p = nengo.Probe(x)
     out_p_filt = nengo.Probe(x, synapse=0.1)
-    
-    print(x.probeable)
+    # before_lin_probe = nengo.Probe(before_linear,synapse=0.1)
+    final_probe = nengo.Probe(final_x,'spikes',synapse=0.1)
 
     # Adding time steps
     minibatch_size = 200
@@ -164,8 +165,8 @@ with nengo.Network() as net:
     train_data = {inp: np.asarray(train_data[0])[:, None,:],
                 out_p: np.asarray(train_data[1])[:, None,:]}
     
+    print(sim.data[final_probe])
     n_steps = 30
-    # n_steps = 10
     # print(test_data)
     test_data = {
         inp: np.tile(np.asarray(test_data[0])[:minibatch_size*2, None, :],
@@ -210,8 +211,7 @@ with nengo.Network() as net:
     print("accuracy after training: %.8f%%" % accuracy_after)
 
     # Print out probe attributes after training
-    print(out_p_filt)
-    output_probe = nengo.Probe(x, 'output',synapse=0.1)
+    print(final_probe)
     # Initialize confusion matrix
     confusion = np.zeros((26, 26))
 
@@ -232,9 +232,6 @@ with nengo.Network() as net:
         print('Sim Data:\n')
         print(sim.data[out_p_filt][i])
 
-        print('Before creating confusion matrix')
-        print(sim.data[out_p_filt])
-        print(sim.data[output_probe])
         # Confusion matrix creation
         # expected = np.argmax(test_data['Probe'].attributes)
         output_data = np.sum(sim.data[out_p_filt][i], axis=0) # output for the specific image we're testing 
@@ -243,9 +240,27 @@ with nengo.Network() as net:
 
         print(confusion)
         
-        plt.legend([str(i) for i in range(26)], loc="upper left")
+        plt.legend([chr(i+97) for i in range(26)], loc="upper left")
         plt.xlabel("time")
-        # plt.show()
+        plt.ylabel("firing rate")
+        plt.title("Linearized Output Signal")
+
+
+        # plt.figure()
+        # plt.plot(sim.trange(), sim.data[before_lin_probe][i])
+        # plt.legend([chr(i+97) for i in range(26)], loc="upper left")
+        # plt.xlabel("time")
+        # plt.ylabel("firing rate")
+        # plt.title("Before Linear Output Firing Rate")
+
+        plt.figure()
+        plt.plot(sim.trange(), sim.data[final_probe][i])
+        plt.legend([chr(i+97) for i in range(26)], loc="upper left")
+        plt.xlabel("time")
+        plt.ylabel("firing rate")
+        plt.title("Output Firing Rate")
+
+        plt.show()
     print(out_p_filt)
     print('end')
 
