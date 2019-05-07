@@ -27,7 +27,10 @@ for i in range(1750):
             img_arr = np.asarray(lc_img)
             train_data[0].append(img_arr.flatten())
 
+# Initialize expected array to create confusion matrix
 expected_arr = []
+
+# Process testing data
 for i in range(250):
     for letterEntry in os.scandir(root_dir_test):
         if not letterEntry.name.startswith('.') and letterEntry.is_dir():
@@ -159,8 +162,6 @@ with nengo.Network() as net:
 
     print("accuracy after training: %.8f%%" % accuracy_after)
 
-    # Print out probe attributes after training
-    print(final_probe)
     # Initialize confusion matrix
     confusion = np.zeros((26, 26))
 
@@ -178,8 +179,6 @@ with nengo.Network() as net:
 
         plt.subplot(1, 2, 2)
         plt.plot(sim.trange(), sim.data[out_p_filt][i])
-        print('Sim Data:\n')
-        print(sim.data[out_p_filt][i])
 
         # Confusion matrix creation
         # Output for the specific image we're testing 
@@ -200,3 +199,5 @@ with nengo.Network() as net:
         plt.title("Output Firing Rate")
 
         plt.show()
+        
+    print(confusion)
