@@ -1,2 +1,2 @@
 # ASLSpikes
-# Using SNN for image recognition of ASL alphabet signs
+Using SNN for image recognition of ASL alphabet signs
